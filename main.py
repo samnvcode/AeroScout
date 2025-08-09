@@ -11,31 +11,21 @@ GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-# ---------------- AIRPORT → CURRENCY ----------------
-def get_currency_from_airport_code(code):
-    airport_currency_map = {
-        # ... (your airport to currency mapping unchanged) ...
-    }
-    return airport_currency_map.get(code.upper(), "USD")
-
-# ---------------- CURRENCY → SYMBOL ----------------
-currency_symbols = {
-    # ... (your currency_symbols dict unchanged) ...
-}
+# (airport_currency_map and currency_symbols unchanged)
 
 # ---------------- STYLE ----------------
 st.set_page_config(page_title="AeroScout", layout="wide", page_icon="✈️")
 st.markdown("""
 <style>
 body {
-    background-color: #000000;  /* black */
-    color: #f0f0f0;             /* light text for dark bg */
+    background-color: #000000;  /* black background */
+    color: #f0f0f0;             /* light text */
 }
 h1, h2, h3, h4 {
     color: #ade8f4;
 }
 div.stButton > button {
-    background-color: #1b4332;
+    background-color: #2d6a4f;
     color: white;
     border-radius: 10px;
     padding: 0.6em 1em;
@@ -45,39 +35,19 @@ div.stButton > button:hover {
     background-color: #40916c;
 }
 .flight-card {
-    border: 2px solid #40916c;
+    border: 2px solid #2d6a4f;
     border-radius: 12px;
     padding: 16px;
-    background-color: #2d6a4f;
+    background-color: #d8f3dc;  /* lighter cream-green */
     margin-bottom: 20px;
-    box-shadow: 2px 4px 10px rgba(0,0,0,0.7);
-    color: #e0e0e0;
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
+    color: #1b4332; /* dark green text for readability */
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- TITLE ----------------
 st.title("✈️ AeroScout")
-
-# ---------------- ABOUT SECTION ----------------
-with st.expander("ℹ️ About AeroScout"):
-    st.markdown("""
-    **AeroScout** is an intelligent flight search and travel assistant powered by **Google's Gemini AI** and **SerpAPI**.
-
-    🔍 **Search & Compare Flights**  
-    Enter your departure and destination airport codes, travel dates, and number of passengers. AeroScout fetches the best flight options in real-time.
-
-    🧠 **AI Summarized Insights**  
-    Gemini provides a clear summary of flight options, including prices, durations, stops, airline amenities, and more — helping you choose the best flight effortlessly.
-
-    💬 **Travel Chatbot**  
-    Ask questions about baggage policies, cancellation rules, airline services, or general travel tips.
-
-    This app was created to simplify flight research and enhance travel planning with the power of AI.
-    """)
-
-# ---------------- LAYOUT ----------------
-left_col, right_col = st.columns(2)
 
 # Utility function to display flight cards
 def display_flight_cards(flights, symbol):
@@ -108,14 +78,15 @@ def display_flight_cards(flights, symbol):
 
         st.markdown(f"""
         <div class="flight-card">
-            <h4>✈️ <strong>{flight_type}</strong> - <span style="color:#ade8f4;">{symbol}{price}</span></h4>
+            <h4>✈️ <strong>{flight_type}</strong> - <span style="color:#2d6a4f;">{symbol}{price}</span></h4>
             <p><strong>Total Duration:</strong> {duration_formatted}</p>
             {segments_html}
         </div>
         """, unsafe_allow_html=True)
 
-
 # ---------------- LEFT COLUMN ----------------
+left_col, right_col = st.columns(2)
+
 with left_col:
     st.subheader("🌍 Search Flights")
     with st.form("flight_form"):
@@ -171,25 +142,22 @@ with left_col:
 
                 full_summary_prompt = policy_prompt + "\n\nFlights:\n" + "\n".join(flight_summaries)
 
+                # Generate summary once
                 summary_response = model.generate_content(full_summary_prompt)
                 summary_text = summary_response.text
 
-                st.info(f"**Gemini Summary:**\n\n{summary_text}")
-
-                # Cache the flights, summary, and chat session in session_state
+                # Cache flights and summary in session state
                 st.session_state["cached_flights"] = flights[:5]
                 st.session_state["cached_symbol"] = symbol
                 st.session_state["gemini_summary"] = summary_text
-                st.session_state["gemini_chat"] = model.start_chat(history=[
-                    {"role": "user", "parts": [full_summary_prompt]},
-                    {"role": "model", "parts": [summary_text]}
-                ])
 
-    # Display cached flights and summary if available
-    if "cached_flights" in st.session_state:
-        st.markdown("### Cached Flight Results")
-        display_flight_cards(st.session_state["cached_flights"], st.session_state["cached_symbol"])
-        st.info(f"**Gemini Summary:**\n\n{st.session_state.get('gemini_summary', '')}")
+        # Display summary above cards
+        if "gemini_summary" in st.session_state:
+            st.info(f"**Gemini Summary:**\n\n{st.session_state['gemini_summary']}")
+
+        # Display cards from cache (so they persist after form submit)
+        if "cached_flights" in st.session_state and "cached_symbol" in st.session_state:
+            display_flight_cards(st.session_state["cached_flights"], st.session_state["cached_symbol"])
 
 # ---------------- RIGHT COLUMN ----------------
 with right_col:
