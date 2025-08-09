@@ -174,7 +174,9 @@ with left_col:
                     {"role": "model", "parts": [summary_text]}
                 ])
 
-
+    # Show Gemini summary once above the flight cards if cached
+    if "gemini_summary" in st.session_state:
+        st.info(f"**Gemini Summary:**\n\n{st.session_state['gemini_summary']}")
 
     # Show flight cards (either new search or cached)
     if "cached_flights" in st.session_state and "cached_symbol" in st.session_state:
