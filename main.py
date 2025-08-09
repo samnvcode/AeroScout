@@ -45,29 +45,36 @@ st.set_page_config(page_title="AeroScout", layout="wide", page_icon="✈️")
 st.markdown("""
 <style>
 body {
-    background-color: #f5f5dc; /* cream */
-    color: #1b4332; /* forest green */
+    background-color: #000000;  /* Black background */
+    color: #e0e0e0;  /* Light gray text */
 }
 h1, h2, h3, h4 {
-    color: #1b4332;
+    color: #a0d8ef;  /* Light blue headings */
 }
 div.stButton > button {
-    background-color: #2d6a4f;
+    background-color: #005f73;
     color: white;
     border-radius: 10px;
     padding: 0.6em 1em;
     border: none;
 }
 div.stButton > button:hover {
-    background-color: #40916c;
+    background-color: #0a9396;
 }
 .flight-card {
-    border: 2px solid #2d6a4f;
+    border: 1.5px solid #0a9396;
     border-radius: 12px;
-    padding: 16px;
-    background-color: #d8f3dc;
+    padding: 20px;
+    background-color: #121212;  /* Very dark gray for card background */
     margin-bottom: 20px;
-    box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(10, 147, 150, 0.3);
+    color: #d0e8f2;  /* Soft light blue text for readability */
+}
+.flight-card h4 {
+    color: #56cfe1;  /* Slightly brighter blue for flight title */
+}
+.flight-card p, .flight-card ul, .flight-card li {
+    color: #a8dadc;  /* Light cyan text */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -187,7 +194,7 @@ with left_col:
 
                     st.markdown(f"""
                     <div class="flight-card">
-                        <h4>✈️ <strong>{flight_type}</strong> - <span style="color:#2d6a4f;">{symbol}{price}</span></h4>
+                        <h4>✈️ <strong>{flight_type}</strong> - <span style="color:#0a9396;">{symbol}{price}</span></h4>
                         <p><strong>Total Duration:</strong> {duration_formatted}</p>
                         {segments_html}
                     </div>
