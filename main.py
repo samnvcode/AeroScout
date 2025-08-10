@@ -1,3 +1,8 @@
+import streamlit as st
+import requests
+from datetime import datetime
+import google.generativeai as genai
+
 # ---------------- CONFIGURATION ----------------
 SERPAPI_API_KEY = st.secrets["SERPAPI_API_KEY"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
