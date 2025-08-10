@@ -45,11 +45,11 @@ st.set_page_config(page_title="AeroScout", layout="wide", page_icon="✈️")
 st.markdown("""
 <style>
 body {
-    background-color: #000000;
-    color: #e0e0e0;
+    background-color: #000000;  /* Black background */
+    color: #e0e0e0;  /* Light gray text */
 }
 h1, h2, h3, h4 {
-    color: #a0d8ef;
+    color: #a0d8ef;  /* Light blue headings */
 }
 div.stButton > button {
     background-color: #005f73;
@@ -65,16 +65,16 @@ div.stButton > button:hover {
     border: 1.5px solid #0a9396;
     border-radius: 12px;
     padding: 20px;
-    background-color: #121212;
+    background-color: #121212;  /* Very dark gray for card background */
     margin-bottom: 20px;
     box-shadow: 0 4px 15px rgba(10, 147, 150, 0.3);
-    color: #d0e8f2;
+    color: #d0e8f2;  /* Soft light blue text for readability */
 }
 .flight-card h4 {
-    color: #56cfe1;
+    color: #56cfe1;  /* Slightly brighter blue for flight title */
 }
 .flight-card p, .flight-card ul, .flight-card li {
-    color: #a8dadc;
+    color: #a8dadc;  /* Light cyan text */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -136,10 +136,6 @@ with left_col:
             flights = results.get("best_flights", [])
 
             if flights:
-                # Cache flights and symbol
-                st.session_state["cached_flights"] = flights
-                st.session_state["cached_symbol"] = symbol
-
                 # Gemini Summary Prompt
                 flight_summaries = []
                 for flight in flights[:5]:
@@ -164,9 +160,7 @@ with left_col:
 
                 summary_response = model.generate_content(full_summary_prompt)
                 summary_text = summary_response.text
-
-                # Cache the summary persistently
-                st.session_state["gemini_summary"] = summary_text
+                st.info(f"**Gemini Summary:**\n\n{summary_text}")
 
                 # Save chat session
                 st.session_state["gemini_chat"] = model.start_chat(history=[
@@ -174,44 +168,37 @@ with left_col:
                     {"role": "model", "parts": [summary_text]}
                 ])
 
-    # Show Gemini summary once above the flight cards if cached
-    if "gemini_summary" in st.session_state:
-        st.info(f"**Gemini Summary:**\n\n{st.session_state['gemini_summary']}")
+                # Show flight cards
+                for flight in flights[:5]:
+                    price = flight.get("price", "N/A")
+                    duration = flight.get("total_duration", "N/A")
+                    flight_type = flight.get("type", "Unknown").title()
+                    segments = flight.get("flights", [])
 
-    # Show flight cards (either new search or cached)
-    if "cached_flights" in st.session_state and "cached_symbol" in st.session_state:
-        cached_flights = st.session_state["cached_flights"]
-        cached_symbol = st.session_state["cached_symbol"]
-        for flight in cached_flights[:5]:
-            price = flight.get("price", "N/A")
-            duration = flight.get("total_duration", "N/A")
-            flight_type = flight.get("type", "Unknown").title()
-            segments = flight.get("flights", [])
+                    try:
+                        mins = int(duration)
+                        hours = mins // 60
+                        minutes = mins % 60
+                        duration_formatted = f"{hours}h {minutes}m"
+                    except:
+                        duration_formatted = f"{duration} min"
 
-            try:
-                mins = int(duration)
-                hours = mins // 60
-                minutes = mins % 60
-                duration_formatted = f"{hours}h {minutes}m"
-            except:
-                duration_formatted = f"{duration} min"
+                    segment_items = []
+                    for seg in segments:
+                        airline = seg.get("airline", "Unknown Airline")
+                        dep = seg.get("departure_airport", {})
+                        arr = seg.get("arrival_airport", {})
+                        segment_items.append(f"<li><strong>{airline}</strong>: {dep.get('name', '')} ({dep.get('id', '')}) {dep.get('time', '')} → {arr.get('name', '')} ({arr.get('id', '')}) {arr.get('time', '')}</li>")
 
-            segment_items = []
-            for seg in segments:
-                airline = seg.get("airline", "Unknown Airline")
-                dep = seg.get("departure_airport", {})
-                arr = seg.get("arrival_airport", {})
-                segment_items.append(f"<li><strong>{airline}</strong>: {dep.get('name', '')} ({dep.get('id', '')}) {dep.get('time', '')} → {arr.get('name', '')} ({arr.get('id', '')}) {arr.get('time', '')}</li>")
+                    segments_html = "<ul>" + "".join(segment_items) + "</ul>"
 
-            segments_html = "<ul>" + "".join(segment_items) + "</ul>"
-
-            st.markdown(f"""
-            <div class="flight-card">
-                <h4>✈️ <strong>{flight_type}</strong> - <span style="color:#0a9396;">{cached_symbol}{price}</span></h4>
-                <p><strong>Total Duration:</strong> {duration_formatted}</p>
-                {segments_html}
-            </div>
-            """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="flight-card">
+                        <h4>✈️ <strong>{flight_type}</strong> - <span style="color:#0a9396;">{symbol}{price}</span></h4>
+                        <p><strong>Total Duration:</strong> {duration_formatted}</p>
+                        {segments_html}
+                    </div>
+                    """, unsafe_allow_html=True)
 
 # ---------------- RIGHT COLUMN ----------------
 with right_col:
